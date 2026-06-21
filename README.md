@@ -1,4 +1,4 @@
-# MD-Site
+# Markdown Pipeline for Static Websites
 
 ## 1. About
 

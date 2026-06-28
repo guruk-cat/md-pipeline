@@ -1,14 +1,29 @@
-# Markdown Pipeline for Static Websites
+# Markdown Tools
 
 ## 1. About
 
-This is a minimal pipeline, written in Python, for converting a bunch of markdown files into html files. Use it for generating static sites from a repository of writing and/or research material that uses Markdown.
+This repo hosts a set of custom-built tools for managing Markdown files. Its primary purposes are as follows:
 
-This repo (`md-pipeline/`) is where the pipeline is developed. It is not where you use it. The pipeline lives in `src/` and gets copied into your own research repo as `.tools/`. A `dummy-repo/` is included here for local testing.
+1. Convert a bunch of Markdown files into a static website.
+2. Merge files that have numbered headings and/or footnotes.
+3. Generate and append tables of contents.
 
-## 2. Expected layout
+This repo (`md-tools/`) is where the tools are developed; it is not intended as the place where you use it. The tools lives in `src/` and gets copied into your own repo as `.tools/` (see [section 2.2.](#22-set-up-the-tools-in-your-repo)). A `dummy-repo/` is included here for local testing.
 
-After setup, your research repo will look something like this:
+## 2. General Usage
+### 2.1. Set up the tools in your repo
+
+Run:
+
+```sh
+python setup-tools.py /path/to/your-repo
+```
+
+This will overwrite any existing `.tools/`, so re-running pushes the latest pipeline. It also ensures `.gitignore` excludes `.public/`. The `config.toml` file, if present, will *not* be overwritten by the script.
+
+### 2.2. Expected layout
+
+After setup, your repo will look something like this:
 
 ```
 repo-root/
@@ -18,33 +33,22 @@ repo-root/
         *.png           ← non-md assets okay
     some-other-docs/
         *.md
-    .tools/             ← pipeline code
+    .tools/             ← tools source
         build.py
         config.toml
         requirements.txt
         template.html
         style.css
         robots.txt
+        ...
     .public/            ← build output, made by build.py
     .gitignore
 ```
 
-The `.tools/` and `.public/` directories are dot-prefixed to keep them out of a markdown editor's file view.
+The `.tools/` and `.public/` directories are dot-prefixed to keep them out of a markdown editor's file view. The `.gitignore` must exclude `.public/`, such that the output of the website pipeline is never committed. (The intended usage is that the script is run on the server-side, to generate its own `.public` output.) The `setup-tools.py` script adds this exclusion for you.
 
-The `.gitignore` must exclude `.public/`, such that the output of the pipeline is never committed. The host (e.g. Cloudflare Pages) runs the script and generates its own `.public/` fresh on every deploy. The `setup-tools.py` script adds this exclusion for you.
-
-## 3. Usage
-### 3.1. Set up the tool in your repo
-
-First, you must copy the pipeline (`src/`) into your research repo as `.tools/`. Run:
-
-```sh
-python setup-tools.py /path/to/your-repo
-```
-
-This will overwrite any existing `.tools/`, so re-running pushes the latest pipeline. It also ensures `.gitignore` excludes `.public/`. The `config.toml` file, if present, will not be overwritten by the script.
-
-### 3.2. Build
+## 3. Website Pipeline
+### 3.1. Build
 
 Run from your repo root:
 
@@ -52,9 +56,9 @@ Run from your repo root:
 python .tools/build.py
 ```
 
-Site preferences (sidebar nav, copyright footer) live in `.tools/config.toml`; see `docs/config.md`. Pass `--selfcheck` to run the pipeline's internal checks without building anything.
+Site preferences (sidebar nav, copyright footer) live in `.tools/config.toml`; see the [configuration docs](docs/config.md). Pass `--selfcheck` to run the pipeline's internal checks without building anything.
 
-### 3.3. Serving locally
+### 3.2. Serving locally
 
 The site is served from `.public/`, which is the web root. You must serve from inside it so the root-absolute links resolve.
 
@@ -64,28 +68,16 @@ cd your-repo/.public && python3 -m http.server 8000
 
 Then go to http://localhost:8000/
 
-### 3.4. Deploy on a Romote Host (e.g., Netlify, Cloudflare, or your own server)
+### 3.3. Deploy on a Romote Host (e.g., Netlify, Cloudflare, or your own server)
 
 Set the build command to `pip install -r .tools/requirements.txt && python .tools/build.py`. Set the output directory to `.public`, typed exactly.
 
 Dependencies are pinned to exact versions in `requirements.txt`, so the build container cannot silently pull an untested version of the markdown library.
 
-## 4. How the build works
+### 3.4. How the build works
 
-Conversion uses the `markdown` library with the `meta`, `toc`, `footnotes`, `tables`, and `fenced_code` extensions. The `toc` extension gives headings IDs so that `#anchor` links resolve.
+See the [relevant documentation](docs/web-build.md).
 
-The root `README.md` becomes the homepage, `index.html`. Every other `.md` file becomes a matching `.html` file, mirroring the source folder structure.
+## 4. File Merger
 
-Internal links are rewritten on the rendered HTML (the `href` attribute) rather than the raw markdown, so links inside code blocks are left alone and reference-style links and footnotes are covered. Links become root-absolute, like `/notes/methods.html`, so navigation works from any folder depth. A link that resolves to the root `README.md` maps to `/index.html`.
-
-Page titles, used for the `<title>` tag and for nav link text, resolve in priority order: the frontmatter `title` field, then the first `# H1` heading, then the filename.
-
-Footnotes stay isolated per page. The build resets the markdown parser before each file, since the `footnotes` extension would otherwise leak definitions from one file into the next.
-
-Non-markdown files such as images are copied through to `.public/`, preserving their structure.
-
-Every build is a full clean rebuild: `.public/` is deleted and regenerated from scratch, so renamed or deleted sources leave no orphan HTML behind. For this reason you should never put hand-authored files in `.public/`.
-
-The pipeline never modifies your source files. All rewriting happens on in-memory HTML and is written only under `.public/`.
-
-The template carries a `noindex, nofollow` meta tag, and `robots.txt` is copied to the output root on every build. Both ship with the pipeline in `.tools/`, so they stay versioned with the source rather than hand-maintained. 
+## 5. TOC Generator

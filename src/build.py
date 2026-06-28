@@ -2,7 +2,7 @@
 """
 Convert a tree of markdown files into a static HTML site.
 
-Runs from the research repo root as `.tools/build.py`.
+Runs from the repo root as `.tools/build.py`.
 Reads `.md` files recursively, renders them, rewrites internal `.md` links to `.html`.
 Wraps each in `template.html`, and writes the mirror tree under `.public/`.
 Source files are never modified.

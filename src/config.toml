@@ -13,3 +13,9 @@ nav = false
 # author = "Your Name"
 # year = 2026
 # tag = "Licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)"
+
+# Options for the standalone TOC builder (toc.py). Defaults shown.
+# [toc-builder]
+# max_depth = 6              # deepest heading level to list
+# slug_style = "site"        # "site" (matches the website build) | "github"
+# toc_title = "Table of Contents"

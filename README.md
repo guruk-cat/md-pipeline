@@ -81,3 +81,11 @@ See the [relevant documentation](docs/web-build.md).
 ## 4. File Merger
 
 ## 5. TOC Generator
+
+Run from your repo root:
+
+```sh
+python .tools/toc.py file/to/path
+```
+
+It will generate a table of contents and append it beneath the H1 heading, if present. If no H1 heading is present, the table will be appended above the text and below the metadata block (if present). For config options, see [configuration docs](docs/config.md).
